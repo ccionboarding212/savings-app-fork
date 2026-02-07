@@ -1,4 +1,5 @@
 # This config was automatically generated from your source code
+# added this dummy line number 2
 # Stacks detected: cicd:github-actions:.github/workflows,deps:node:.
 version: 2.1
 orbs:
