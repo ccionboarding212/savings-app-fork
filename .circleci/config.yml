@@ -1,58 +1,57 @@
-# This config was automatically generated from your source code
-# added this dummy line number 2
-# Stacks detected: cicd:github-actions:.github/workflows,deps:node:.
+# CircleCI Configuration for savings-app
+# Optimized for performance with workspace persistence and parallel execution
 version: 2.1
 orbs:
   node: circleci/node@5
 jobs:
-  test-node:
-    # Install node dependencies and run tests
+  install-dependencies:
+    # Install dependencies once and persist to workspace
     executor: node/default
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: npm
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules
+            - .
+  test-node:
+    # Run tests using persisted workspace
+    executor: node/default
+    steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Run tests
           command: npm test --passWithNoTests
+      - store_test_results:
+          path: ./test-results
   build-node:
-    # Build node project
+    # Build project using persisted workspace
     executor: node/default
     steps:
-      - checkout
-      - node/install-packages:
-          pkg-manager: npm
+      - attach_workspace:
+          at: .
       - run:
+          name: Build project
           command: npm run build
       - run:
-          name: Create the ~/artifacts directory if it doesn't exist
+          name: Create artifacts directory
           command: mkdir -p ~/artifacts
-      # Copy output to artifacts dir
       - run:
           name: Copy artifacts
-          command: cp -R build dist public .output .next .docusaurus ~/artifacts 2>/dev/null || true
+          command: cp -R dist ~/artifacts 2>/dev/null || true
       - store_artifacts:
           path: ~/artifacts
           destination: node-build
-  deploy:
-    # This is an example deploy job, not actually used by the workflow
-    docker:
-      - image: cimg/base:stable
-    steps:
-      # Replace this with steps to deploy to users
-      - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
-      - run:
-          name: found github actions config
-          command: ':'
 workflows:
   build-and-test:
     jobs:
-      - test-node
+      - install-dependencies
+      - test-node:
+          requires:
+            - install-dependencies
       - build-node:
           requires:
-            - test-node
-    # - deploy:
-    #     requires:
-    #       - build-node
+            - install-dependencies
