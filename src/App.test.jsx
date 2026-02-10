@@ -28,9 +28,9 @@ describe('Spending Tracker App', () => {
 
     it('has default form values', () => {
       render(<App />)
-      
-      expect(screen.getByDisplayValue('General')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('MXN')).toBeInTheDocument()
+
+      expect(screen.getByTestId('category-select')).toHaveValue('General')
+      expect(screen.getByTestId('currency-toggle')).toHaveTextContent('MXN')
       expect(screen.getByPlaceholderText('0.00')).toHaveValue('')
       expect(screen.getByPlaceholderText('Add a note about this spending...')).toHaveValue('')
     })
@@ -154,22 +154,26 @@ describe('Spending Tracker App', () => {
     it('adds a new spending when form is valid', async () => {
       const user = userEvent.setup()
       render(<App />)
-      
+
       // Fill form
       const categorySelect = screen.getByTestId('category-select')
       const amountInput = screen.getByTestId('amount-input')
       const noteInput = screen.getByTestId('note-input')
       const addButton = screen.getByTestId('add-spending-btn')
-      
+
       await user.selectOptions(categorySelect, 'Personal')
       await user.type(amountInput, '50.75')
       await user.type(noteInput, 'Coffee and lunch')
       await user.click(addButton)
-      
+
       // Check spending was added
-      expect(screen.getByText('Personal')).toBeInTheDocument()
-      expect(screen.getByText('$50.75 MXN')).toBeInTheDocument()
-      expect(screen.getByText('"Coffee and lunch"')).toBeInTheDocument()
+      const spendingItems = screen.getAllByTestId('spending-item')
+      expect(spendingItems.length).toBeGreaterThan(0)
+
+      const spendingItem = spendingItems[0]
+      expect(spendingItem.textContent).toContain('Personal')
+      expect(spendingItem.textContent).toContain('$50.75 MXN')
+      expect(spendingItem.textContent).toContain('"Coffee and lunch"')
     })
 
     it('resets form after adding spending', async () => {
@@ -295,40 +299,42 @@ describe('Spending Tracker App', () => {
     it('displays spending information correctly', async () => {
       const user = userEvent.setup()
       render(<App />)
-      
+
       const categorySelect = screen.getByTestId('category-select')
       const amountInput = screen.getByTestId('amount-input')
       const noteInput = screen.getByTestId('note-input')
       const addButton = screen.getByTestId('add-spending-btn')
-      
+
       await user.selectOptions(categorySelect, 'House')
       await user.type(amountInput, '150.25')
       await user.type(noteInput, 'Groceries and utilities')
       await user.click(addButton)
-      
-      const spendingItem = screen.getByTestId('spending-item')
-      
-      // Check all elements are present
-      expect(spendingItem).toContainElement(screen.getByText('House'))
-      expect(spendingItem).toContainElement(screen.getByText('$150.25 MXN'))
-      expect(spendingItem).toContainElement(screen.getByText('"Groceries and utilities"'))
+
+      const spendingItems = screen.getAllByTestId('spending-item')
+      const spendingItem = spendingItems[0]
+
+      // Check all elements are present within the spending item
+      expect(spendingItem.textContent).toContain('House')
+      expect(spendingItem.textContent).toContain('$150.25 MXN')
+      expect(spendingItem.textContent).toContain('"Groceries and utilities"')
     })
 
     it('does not show note section when note is empty', async () => {
       const user = userEvent.setup()
       render(<App />)
-      
+
       const amountInput = screen.getByTestId('amount-input')
       const addButton = screen.getByTestId('add-spending-btn')
-      
+
       await user.type(amountInput, '25.00')
       await user.click(addButton)
-      
-      const spendingItem = screen.getByTestId('spending-item')
-      
-      expect(spendingItem).toContainElement(screen.getByText('General'))
-      expect(spendingItem).toContainElement(screen.getByText('$25.00 MXN'))
-      expect(spendingItem.querySelector('.spending-note')).not.toBeInTheDocument()
+
+      const spendingItems = screen.getAllByTestId('spending-item')
+      const spendingItem = spendingItems[0]
+
+      expect(spendingItem.textContent).toContain('General')
+      expect(spendingItem.textContent).toContain('$25.00 MXN')
+      expect(screen.queryByTestId('spending-note')).not.toBeInTheDocument()
     })
   })
 }) 

@@ -16,11 +16,11 @@ function App() {
   const handleInputChange = (field, value) => {
     if (field === 'amount') {
       // Only allow numbers and decimal point
-      const numericValue = value.replace(/[^0-9.]/g, '');
-      // Prevent multiple decimal points
+      let numericValue = value.replace(/[^0-9.]/g, '');
+      // Prevent multiple decimal points - keep only the first decimal point
       const parts = numericValue.split('.');
       if (parts.length > 2) {
-        return;
+        numericValue = parts[0] + '.' + parts.slice(1).join('');
       }
       setFormData(prev => ({ ...prev, amount: numericValue }));
     } else if (field === 'note') {
@@ -212,7 +212,7 @@ function App() {
                   {formatAmount(spending.amount, spending.currency)}
                 </div>
                 {spending.note && (
-                  <div className="spending-note">
+                  <div className="spending-note" data-testid="spending-note">
                     "{spending.note}"
                   </div>
                 )}
